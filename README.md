@@ -1,28 +1,63 @@
-# GT 카 프로젝트
-1. 배터리
-1) 가장 무난한 가성비 1등 (추천)
+## FASTDDS DISCOVERY SETTING ##
+1. 설치
+sudo apt update
+sudo apt install fastdds-tools
 
-✅ 3S (11.1V) / 5000mAh / 25C~50C / XT60 / 하드케이스
+2. 설정 (서버) - 로봇, 로봇별 설정(P05L 기준)
+ 1) mkdir -p /etc/fastdds
+ 2) sudo nano discovery-server.conf
+    작성
+    SERVER_ID=1
+    SERVER_IP=192.168.0.105
+    SERVER_PORT=11811
 
-이유: 3S 5000mAh가 시장에 제일 흔해서 Wh당 가격이 가장 잘 나오는 구간이 많음.
+ 3) sudo nano /etc/systemd/system/fastdds-discovery-server.service
+    작성
+    [Unit]
+    Description=Fast DDS Discovery Server
+    After=network-online.target
+    Wants=network-online.target
 
-에너지: 11.1V×5Ah ≈ 55Wh
-→ 로봇 평균소비 60~100W면 대충 30~50분 체감.
+    [Service]
+    Type=simple
+    EnvironmentFile=/etc/fastdds/discovery-server.conf
 
-C는 25C만 돼도 5Ah×25C=125A라서 모터 피크에는 충분한 편. (그래서 80C/100C는 가성비 떨어짐)
+    ExecStart=/usr/bin/fastdds discovery \
+    --server-id ${SERVER_ID} \
+    --ip-address ${SERVER_IP} \
+    --port ${SERVER_PORT} \
+    --backup
 
-2) “런타임 가성비”까지 챙기려면
+    Restart=always
+    RestartSec=1
 
-✅ 3S / 6000~8000mAh / 20C~35C / XT60
+    StandardOutput=journal
+    StandardError=journal
 
-이유: 팩 1개로 버티는 시간이 늘어서, 팩 여러 개 사는 것보다 결과적으로 싸게 먹히는 경우가 많음.
+    [Install]
+    WantedBy=multi-user.target
 
-단점: 무게/부피 증가 + 가격도 확 오르는 구간이 있음(판매처 따라)
+ 4) sudo systemctl daemon-reload
+    sudo systemctl enable --now fastdds-discovery-server.service
 
-3) “최저가로 일단 굴려보기” (하지만 금방 방전됨)
+ 5) bashrc
+    export ROS_DOMAIN_ID=20
+    export ROS_DISCOVERY_SERVER=";192.168.0.105:11811"
 
-✅ 3S / 2200mAh / 25C~35C / XT60
+    * 지금은 SERVER_ID가 1이라서 ; -> 0이면 ; 없이 -> 2면 ;; 2개
 
-이유: 초기 진입 비용이 낮음
+ 6) 확인
+   systemctl status fastdds-discovery-server.service --no-pager : acitavt 되고 있는지
+   sudo journalctl -u fastdds-discovery-server.service -n 50 --no-pager : 안될때 에러 로그 확인
 
-단점: 11.1V×2.2Ah ≈ 24Wh라 10~25분 느낌일 가능성이 큼(주행/컴퓨팅 부하에 따라)
+ 7) 재시작
+   sudo systemctl daemon-reload
+   sudo systemctl reset-failed fastdds-discovery-server.service
+   sudo systemctl restart fastdds-discovery-server.service
+
+3. PC
+ $bashrc
+ export ROS_DOMAIN_ID=20 
+ export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+ export ROS_DISCOVERY_SERVER="192.168.0.103:11811;192.168.0.105:11811;192.168.0.106:11811" 
+ export ROS_SUPER_CLIENT=TRUE
