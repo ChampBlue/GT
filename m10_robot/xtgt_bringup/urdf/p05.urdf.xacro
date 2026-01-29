@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<robot name="p05l" xmlns:xacro="http://ros.org/wiki/xacro">
+  <!-- ===== Constants ===== -->
+  <xacro:arg name="prefix" default=""/>
+  <xacro:property name="prefix" value="$(arg prefix)"/>
+
+  <xacro:property name="base_width"    value="0.65"/>
+  <xacro:property name="base_length"   value="0.8626"/>
+  <xacro:property name="base_height"   value="0.283"/>
+
+  <xacro:property name="wheel_radius"  value="0.19"/>
+  <xacro:property name="wheel_width"   value="0.114"/>
+  <xacro:property name="wheel_ygap"    value="0.391"/>
+  <xacro:property name="wheel_zoff"    value="-0.06025"/>
+
+  <xacro:property name="wheel_base" value="0.460"/>
+  <xacro:property name="x_front" value="${  wheel_base/2}"/>
+  <xacro:property name="x_rear" value="${  -wheel_base/2}"/>
+
+  <!-- ROBOT BASE -->
+  <link name="${prefix}base_link">
+    <visual>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+      <material name="Cyan">
+        <color rgba="0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+
+    <collision>
+      <geometry>
+        <box size="${base_length} ${base_width} ${base_height}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- ROBOT FOOTPRINT -->
+  <link name="${prefix}base_footprint"/>
+
+  <joint name="${prefix}base_joint" type="fixed">
+    <parent link="${prefix}base_footprint"/>
+    <child link="${prefix}base_link"/>
+    <origin xyz="0.0 0.0 ${wheel_radius-wheel_zoff}" rpy="0 0 0"/>
+  </joint>  
+
+  <!-- WHEELS -->
+  <xacro:macro name="wheel" params="name x y z">
+    <link name="${prefix}${name}_link">
+      <visual>
+        <origin rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin rpy="-1.57079632679 0 0"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}${name}_joint" type="continuous">
+      <parent link="${prefix}base_link"/>
+      <child link="${prefix}${name}_link"/>
+      <origin xyz="${x} ${y} ${z}"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel name="lf_wheel" x="${x_front}" y="${ wheel_ygap}" z="${wheel_zoff}"/>
+  <xacro:wheel name="lr_wheel" x="${x_rear }" y="${ wheel_ygap}" z="${wheel_zoff}"/>
+  <xacro:wheel name="rf_wheel" x="${x_front}" y="${-wheel_ygap}" z="${wheel_zoff}"/>
+  <xacro:wheel name="rr_wheel" x="${x_rear }" y="${-wheel_ygap}" z="${wheel_zoff}"/>
+
+  <!-- Laser -->
+  <link name="${prefix}laser">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.035" length="0.02"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="${prefix}laser_joint" type="fixed">
+    <parent link="${prefix}base_link"/>
+    <child link="${prefix}laser"/>
+    <origin xyz="0.287 0 0.216" rpy="0 0 3.14"/>
+  </joint>
+
+  <!-- IMU -->
+  <link name="${prefix}imu_link">
+    <visual>
+      <geometry>
+        <box size="0.04 0.045 0.02"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.6 0.6 0.6 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="${prefix}imu_joint" type="fixed">
+    <parent link="${prefix}base_link"/>
+    <child link="${prefix}imu_link"/>
+    <origin xyz="0 0 0.01" rpy="0 0 0"/>
+  </joint>
+
+  <!-- MOBING BASE-->
+  <link name="${prefix}gps_base">
+    <visual>
+      <geometry>
+        <box size="0.06 0.06 0.02"/>
+      </geometry>
+      <material name="balck">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="${prefix}gps_base_joint" type="fixed">
+    <parent link="${prefix}base_link"/>
+    <child link="${prefix}gps_base"/>
+    <origin xyz="-0.391 0.234 0.165" rpy="0 0 0"/>
+  </joint>
+
+  <!-- ROVER -->
+  <link name="${prefix}gps_rover">
+    <visual>
+      <geometry>
+        <box size="0.06 0.06 0.02"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="${prefix}gps_rover_joint" type="fixed">
+    <parent link="${prefix}base_link"/>
+    <child link="${prefix}gps_rover"/>
+    <origin xyz="-0.041 0.234 0.165" rpy="0 0 0"/>
+  </joint>
+</robot>
