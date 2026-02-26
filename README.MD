@@ -1,3 +1,8 @@
+## 디렉토리 설명 ##
+# xtgt_robot : 2026 설 직전 마지막 rclpy 백업 코드(마지막 작업 : filtered_lidar 파라미터 콜백해서 수정가능하게함.) 
+# m10 : 이후 진행할 프로젝트(rclpy -> rclcpp / rclpy 코드들 신규 코드 작성)
+
+
 ## FASTDDS DISCOVERY SETTING ##
 1. 설치
 sudo apt update
@@ -13,29 +18,28 @@ sudo apt install fastdds-tools
 
  3) sudo nano /etc/systemd/system/fastdds-discovery-server.service
     작성
-    [Unit]
-    Description=Fast DDS Discovery Server
-    After=network-online.target
-    Wants=network-online.target
+   [Unit]
+   Description=Fast DDS Discovery Server
+   After=network-online.target
+   Wants=network-online.target
 
-    [Service]
-    Type=simple
-    EnvironmentFile=/etc/fastdds/discovery-server.conf
+   [Service]
+   Type=simple
+   EnvironmentFile=/etc/fastdds/discovery-server.conf
 
-    ExecStart=/usr/bin/fastdds discovery \
-    --server-id ${SERVER_ID} \
-    --ip-address ${SERVER_IP} \
-    --port ${SERVER_PORT} \
-    --backup
+   ExecStart=/usr/bin/fast-discovery-server \
+      --server-id ${SERVER_ID} \
+      --ip-address ${SERVER_IP} \
+      --port ${SERVER_PORT}
 
-    Restart=always
-    RestartSec=1
+   Restart=always
+   RestartSec=1
+   StandardOutput=journal
+   StandardError=journal
 
-    StandardOutput=journal
-    StandardError=journal
+   [Install]
+   WantedBy=multi-user.target
 
-    [Install]
-    WantedBy=multi-user.target
 
  4) sudo systemctl daemon-reload
     sudo systemctl enable --now fastdds-discovery-server.service
@@ -61,3 +65,21 @@ sudo apt install fastdds-tools
  export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
  export ROS_DISCOVERY_SERVER="192.168.0.103:11811;192.168.0.105:11811;192.168.0.106:11811" 
  export ROS_SUPER_CLIENT=TRUE
+
+
+
+ ## jetson cpu 확인 ##
+ 1. 스레드별 cpu확인
+ ps -Leo pid,tid,psr,pcpu,comm --sort=-pcpu | head -20
+
+ 2. pid로 스레드별 보기 
+ top -H -p <PID>
+
+ 3. jetson cpu 풀파워
+ sudo jetson_clocks
+
+
+ ## Project costmap filter ##
+ 1. rviz2 
+ - 설치 : cd ros2_ws/src -> git clone https://github.com/swri-robotics/rviz_polygon_selection_tool.git
+ - 빌드 : cd ros2_ws -> rosdep update -> rosdep install --from-paths src -i -y --rosdistro humble -> colcon build --symlink-install
